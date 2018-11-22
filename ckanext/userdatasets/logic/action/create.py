@@ -3,13 +3,18 @@ import ckan.plugins as plugins
 import ckan.lib.plugins as lib_plugins
 import ckan.lib.dictization.model_save as model_save
 
-from ckan.logic import check_access, get_action, ValidationError
+from ckan.logic import check_access, get_action, ValidationError, NotFound
+import ckan.logic as logic
+import ckan.lib.base as base
+
 from ckan.common import _
 
 from ckan.logic.validators import owner_org_validator as default_oov
 from ckanext.userdatasets.logic.validators import owner_org_validator as uds_oov
+import ckanext.publicamundi.lib.helpers as ext_helpers
 
 log = logging.getLogger(__name__)
+abort = base.abort
 
 def package_create(context, data_dict):
     model = context['model']
@@ -46,6 +51,7 @@ def package_create(context, data_dict):
               errors, context.get('user'),
               data.get('name'), data_dict)
 
+
     if errors:
         model.Session.rollback()
         raise ValidationError(errors)
@@ -66,7 +72,7 @@ def package_create(context, data_dict):
 
     pkg = model_save.package_dict_save(data, context)
 
-    model.setup_default_user_roles(pkg, admins)
+    #model.setup_default_user_roles(pkg, admins)
     # Needed to let extensions know the package id
     model.Session.flush()
     data['id'] = pkg.id
@@ -77,6 +83,22 @@ def package_create(context, data_dict):
     get_action('package_owner_org_update')(context_org_update,
                                             {'id': pkg.id,
                                              'organization_id': pkg.owner_org})
+
+    # add dataset in corresponding topics(groups) based on subject
+    groups = ext_helpers.topicsMatch(data_dict['closed_tag'])
+
+    context_group_update = context.copy()
+    context_group_update['ignore_auth'] = True
+    context_group_update['defer_commit'] = True
+    for group in groups:
+        group_data_dict = {"id": group,
+                             "object": pkg.id,
+                             "object_type": 'package',
+                             "capacity": 'public'}
+        try:
+            logic.get_action('member_create')(context_group_update, group_data_dict)
+        except NotFound:
+            abort(404, _('Group not found'))   
 
     for item in plugins.PluginImplementations(plugins.IPackageController):
         item.create(pkg)

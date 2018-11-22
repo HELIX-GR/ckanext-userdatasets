@@ -1,5 +1,9 @@
 from ckan import logic
-from ckan.new_authz import users_role_for_group_or_org
+from ckan.authz import users_role_for_group_or_org
+
+import logging
+log1=logging.getLogger(__name__)
+
 
 def user_is_member_of_package_org(user, package):
     """Return True if the package is in an organization and the user has the member role in that organization
@@ -8,6 +12,7 @@ def user_is_member_of_package_org(user, package):
     @param package: A package object
     @return: True if the user has the 'member' role in the organization that owns the package, False otherwise
     """
+    #log1.debug("Package is: %s", package)
     if package.owner_org:
         role_in_org = users_role_for_group_or_org(package.owner_org, user.name)
         if role_in_org == 'member':
@@ -37,7 +42,7 @@ def get_resource_view_object(context, data_dict):
             data_dict = {}
         id = data_dict.get('id', None)
         if not id:
-            raise logic.ValidationError('Missing id, can not get {0} object'
+            raise logic.ValidationError('A Missing id, can not get {0} object'
                                         .format('ResourceView'))
         obj = getattr(model, 'ResourceView').get(id)
         if not obj:

@@ -2,7 +2,8 @@ import importlib
 import ckan.plugins as p
 
 config = {}
-
+import logging
+log1 = logging.getLogger(__name__)
 
 class UserDatasetsPlugin(p.SingletonPlugin):
     """"UserDatasetsPlugin
@@ -32,7 +33,14 @@ class UserDatasetsPlugin(p.SingletonPlugin):
                 fn_name = atype + '_' + action
                 if hasattr(default_module, fn_name) and hasattr(uds_module, fn_name):
                     auth_functions[fn_name] = getattr(uds_module, fn_name)
-
+        for fn_name in ['organization_update', 'bulk_update_public', 'bulk_update_private', 'bulk_update_delete']:
+            default_module = importlib.import_module(config['default_auth_module'] + '.' + 'update')
+            uds_module = importlib.import_module('ckanext.userdatasets.logic.auth.' + 'update')
+            if hasattr(default_module, fn_name) and hasattr(uds_module, fn_name):
+                    auth_functions[fn_name] = getattr(uds_module, fn_name)
+        #auth_functions['organization_update'] = 'ckanext.userdatasets.logic.auth.update.organization_update' 
+        
+        #log1.info('\nIN GET AUTH , auth_functions is %s\n', auth_functions)
         return auth_functions
 
     def get_actions(self):
@@ -42,6 +50,7 @@ class UserDatasetsPlugin(p.SingletonPlugin):
         to_override = [
             ('create', ['package_create']),
             ('update', ['package_update']),
+            ('update', ['bulk_update_public']),
             ('get', ['organization_list_for_user'])
         ]
         for override in to_override:

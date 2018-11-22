@@ -1,8 +1,9 @@
 from ckan.logic.auth import get_package_object, get_resource_object
-from ckan.new_authz import users_role_for_group_or_org, has_user_permission_for_some_org
+from ckan.authz import users_role_for_group_or_org, has_user_permission_for_some_org
 from ckanext.userdatasets.plugin import get_default_auth
 from ckanext.userdatasets.logic.auth.auth import user_owns_package_as_member, user_is_member_of_package_org
-
+import logging
+log1 = logging.getLogger(__name__)
 
 def package_create(context, data_dict):
     user = context['auth_user_obj']
@@ -23,7 +24,13 @@ def package_create(context, data_dict):
 
 def resource_create(context, data_dict):
     user = context['auth_user_obj']
-    package = get_package_object(context, data_dict)
+    model = context['model']
+
+    log1 = logging.getLogger(__name__)
+    #log1.debug('\n\n Resource create data dict is %s\n\n',data_dict)
+    #package = get_package_object(context, data_dict)
+    package_id = data_dict.get('package_id')
+    package = model.Package.get(package_id)
     if user_owns_package_as_member(user, package):
         return {'success': True}
     elif user_is_member_of_package_org(user, package):
@@ -35,6 +42,7 @@ def resource_create(context, data_dict):
 
 def resource_view_create(context, data_dict):
     user = context['auth_user_obj']
+    model = context['model']
     # data_dict provides 'resource_id', while get_resource_object expects 'id'. This is not consistent with the rest of
     # the API - so future proof it by catering for both cases in case the API is made consistent (one way or the other)
     # later.
@@ -45,9 +53,10 @@ def resource_view_create(context, data_dict):
     else:
         dc = data_dict
     resource = get_resource_object(context, dc)
-    if user_owns_package_as_member(user, resource.resource_group.package):
+    package = model.Package.get(resource.package_id)
+    if user_owns_package_as_member(user, package):
         return {'success': True}
-    elif user_is_member_of_package_org(user, resource.resource_group.package):
+    elif user_is_member_of_package_org(user, package):
         return {'success': False}
 
     fallback = get_default_auth('create', 'resource_view_create')
