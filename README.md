@@ -23,7 +23,7 @@ Notes:
 Compatibility
 -------------
 
-- v0.1 for CKAN 2.2
+Updated for CKAN 2.8.0
 
 Configuration
 -------------
