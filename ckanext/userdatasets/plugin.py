@@ -40,6 +40,10 @@ class UserDatasetsPlugin(p.SingletonPlugin):
                     auth_functions[fn_name] = getattr(uds_module, fn_name)
         #auth_functions['organization_update'] = 'ckanext.userdatasets.logic.auth.update.organization_update' 
         
+<<<<<<< HEAD
+=======
+        #log1.info('\nIN GET AUTH , auth_functions is %s\n', auth_functions)
+>>>>>>> upstream/master
         return auth_functions
 
     def get_actions(self):

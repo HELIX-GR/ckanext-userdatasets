@@ -12,6 +12,7 @@ def user_is_member_of_package_org(user, package):
     @param package: A package object
     @return: True if the user has the 'member' role in the organization that owns the package, False otherwise
     """
+    #log1.debug("Package is: %s", package)
     if package.owner_org:
         role_in_org = users_role_for_group_or_org(package.owner_org, user.name)
         if role_in_org == 'member':

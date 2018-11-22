@@ -11,7 +11,11 @@ from ckan.common import _
 
 from ckan.logic.validators import owner_org_validator as default_oov
 from ckanext.userdatasets.logic.validators import owner_org_validator as uds_oov
+<<<<<<< HEAD
 import ckanext.helix.lib.helpers as ext_helpers
+=======
+import ckanext.publicamundi.lib.helpers as ext_helpers
+>>>>>>> upstream/master
 
 log = logging.getLogger(__name__)
 abort = base.abort

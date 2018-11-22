@@ -15,7 +15,11 @@ import uuid
 
 from ckan.logic.validators import owner_org_validator as default_oov
 from ckanext.userdatasets.logic.validators import owner_org_validator as uds_oov
+<<<<<<< HEAD
 import ckanext.helix.lib.helpers as ext_helpers
+=======
+import ckanext.publicamundi.lib.helpers as ext_helpers
+>>>>>>> upstream/master
 
 log = logging.getLogger(__name__)
 abort = base.abort
@@ -37,6 +41,10 @@ def package_update(context, data_dict):
 
     # get the schema
     package_plugin = lib_plugins.lookup_package_plugin(pkg.type)
+<<<<<<< HEAD
+=======
+    #log.debug('\n\n\n PACKAGE UPDATE plugin is %s, context is %s', package_plugin, context) 
+>>>>>>> upstream/master
     if 'schema' in context and context['schema'] is not None:
         schema = context['schema']
     else:
@@ -122,7 +130,11 @@ def package_update(context, data_dict):
 
     # Make sure that a user provided schema is not used on package_show
     context.pop('schema', None)
+<<<<<<< HEAD
     #log.debug('id = %s', data_dict['id'])
+=======
+    log.debug('id = %s', data_dict['id'])
+>>>>>>> upstream/master
     # we could update the dataset so we should still be able to read it.
     context['ignore_auth'] = True
     output = data_dict['id'] if return_id_only \
@@ -144,9 +156,17 @@ def _bulk_update_dataset(context, data_dict, update_dict):
         #update_dict['datacite.public_doi'] = 'public_doi'
         #dataset = logic.get_action('package_show')(context, {'id': data_dict['id']})
         dataset = logic.action.get.package_show(context, data_dict)
+<<<<<<< HEAD
         #Add new uuid for public doi (dataset is now published)
         if 'datacite.public_doi' not in dataset:   
             new_uuid = uuid.uuid4()
+=======
+        #log.info('\n\nDataset is %s\n\n', dataset)
+        #Add new uuid for public doi (dataset is now published)
+        if 'datacite.public_doi' not in dataset:   
+            new_uuid = uuid.uuid4()
+            log.info('\n\nUUID is %s\n\n', new_uuid)
+>>>>>>> upstream/master
             dataset['datacite.public_doi'] = str(new_uuid)
             package_update(context, dataset)
     model = context['model']
@@ -184,6 +204,10 @@ def _bulk_update_dataset(context, data_dict, update_dict):
         for result in query.run(q)['results']:
             data_dict = json.loads(result['data_dict'])
             if data_dict['owner_org'] == org_id:
+<<<<<<< HEAD
+=======
+                #log.info('\n\nDATA DICT IS %s\n\n',data_dict)
+>>>>>>> upstream/master
                 data_dict.update(update_dict)
                 psi.index_package(data_dict, defer_commit=True)
 
