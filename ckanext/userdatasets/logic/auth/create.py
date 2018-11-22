@@ -27,11 +27,6 @@ def resource_create(context, data_dict):
     model = context['model']
 
     log1 = logging.getLogger(__name__)
-<<<<<<< HEAD
-=======
-    #log1.debug('\n\n Resource create data dict is %s\n\n',data_dict)
-    #package = get_package_object(context, data_dict)
->>>>>>> upstream/master
     package_id = data_dict.get('package_id')
     package = model.Package.get(package_id)
     if user_owns_package_as_member(user, package):

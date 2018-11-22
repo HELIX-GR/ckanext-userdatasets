@@ -46,18 +46,9 @@ def resource_view_update(context, data_dict):
     return fallback(context, data_dict)
 
 def organization_update(context, data_dict):
-<<<<<<< HEAD
     
     group = logic_auth.get_group_object(context, data_dict)
     user = context['user']
-=======
-    import logging
-    log1 = logging.getLogger(__name__)
-    log1.info('\nIN CUSTOM ORG UPDATE\n')
-    group = logic_auth.get_group_object(context, data_dict)
-    user = context['user']
-    log1.info('\nIN CUSTOM ORG UPDATE user is %s, context is %s, data dict is %s\n',user, context, data_dict)
->>>>>>> upstream/master
     authorized = authz.has_user_permission_for_group_or_org(
         group.id, user, 'update')
     if data_dict:
