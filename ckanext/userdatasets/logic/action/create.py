@@ -98,6 +98,17 @@ def package_create(context, data_dict):
             logic.get_action('member_create')(context_group_update, group_data_dict)
         except NotFound:
             abort(404, _('Group not found'))   
+    if 'group_id' in data_dict and data_dict['group_id']:  
+        #log.debug('group id %s',data_dict['group_id'])
+        # add dataset in chosen community(group)
+        community_data_dict = {"id": data_dict['group_id'],
+                                "object": pkg.id,
+                                "object_type": 'package',
+                                "capacity": 'public'}
+        try:
+            logic.get_action('member_create')(context_group_update, community_data_dict)
+        except NotFound:
+                abort(404, _('Community not found'))   
 
     for item in plugins.PluginImplementations(plugins.IPackageController):
         item.create(pkg)

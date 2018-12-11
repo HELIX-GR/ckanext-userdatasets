@@ -40,7 +40,7 @@ def package_update(context, data_dict):
     if 'schema' in context and context['schema'] is not None:
         schema = context['schema']
     else:
-        log.debug('\nSCHEMA NOT IN CONTEXT\n')
+        #log.debug('\nSCHEMA NOT IN CONTEXT\n')
         schema = package_plugin.update_package_schema()
 
     # add dataset in corresponding topics(groups) based on subject
@@ -58,7 +58,21 @@ def package_update(context, data_dict):
             logic.get_action('member_create')(context_group_update, group_data_dict)
         except NotFound:
             abort(404, _('Group not found'))    
-    
+
+    log.debug('data dict %s', data_dict)
+    if 'group_id' in data_dict and data_dict['group_id']:  
+        #log.debug('group id %s',data_dict['group_id'])
+        # add dataset in chosen community(group)
+        community_data_dict = {"id": data_dict['group_id'],
+                                "object": pkg.id,
+                                "object_type": 'package',
+                                "capacity": 'public'}
+        try:
+            logic.get_action('member_create')(context_group_update, community_data_dict)
+        except NotFound:
+                abort(404, _('Community not found'))       
+
+
     # We modify the schema here to replace owner_org_validator by our own
     if 'owner_org' in schema:
         schema['owner_org'] = [uds_oov if f is default_oov else f for f in schema['owner_org']]
