@@ -40,7 +40,6 @@ def package_update(context, data_dict):
     if 'schema' in context and context['schema'] is not None:
         schema = context['schema']
     else:
-        #log.debug('\nSCHEMA NOT IN CONTEXT\n')
         schema = package_plugin.update_package_schema()
 
     # add dataset in corresponding topics(groups) based on subject
@@ -59,7 +58,6 @@ def package_update(context, data_dict):
         except NotFound:
             abort(404, _('Group not found'))    
 
-    log.debug('data dict %s', data_dict)
     if 'group_id' in data_dict and data_dict['group_id']:  
         #log.debug('group id %s',data_dict['group_id'])
         # add dataset in chosen community(group)
@@ -144,25 +142,26 @@ def package_update(context, data_dict):
 
     return output
 
+#Add new uuid for public doi (datasets are now published)
+def add_public_doi(datasets):
+    context_copy = {'model': m, 'session': m.Session,
+                   'user': c.user or c.author, 'auth_user_obj': c.userobj, 'ignore_auth' : True}
+    for id in datasets:
+        dataset = get_action('package_show')(context_copy, {'id': id})
+        if 'datacite.public_doi' not in dataset:   
+            new_uuid = uuid.uuid4()
+            dataset['datacite.public_doi'] = str(new_uuid)
+            package_update(context_copy, dataset)
 
 def _bulk_update_dataset(context, data_dict, update_dict):
     ''' Bulk update shared code for organizations'''
 
     datasets = data_dict.get('datasets', [])
     org_id = data_dict.get('org_id')
-    context = {'model': m, 'session': m.Session,
-                   'user': c.user or c.author, 'auth_user_obj': c.userobj}
-    #log.info('\n\n\Context is %s\n\n',context)
-    for id in datasets:
-        data_dict['id'] = id
-        #update_dict['datacite.public_doi'] = 'public_doi'
-        #dataset = logic.get_action('package_show')(context, {'id': data_dict['id']})
-        dataset = logic.action.get.package_show(context, data_dict)
-        #Add new uuid for public doi (dataset is now published)
-        if 'datacite.public_doi' not in dataset:   
-            new_uuid = uuid.uuid4()
-            dataset['datacite.public_doi'] = str(new_uuid)
-            package_update(context, dataset)
+    
+    log.info(' datasets are %s, type %s', datasets, type(datasets))
+    add_public_doi(datasets)
+        
     model = context['model']
     model.Session.query(model.package_table) \
         .filter(model.Package.id.in_(datasets)) \
@@ -213,6 +212,7 @@ def _bulk_update_dataset(context, data_dict, update_dict):
         process_solr(' OR '.join(q))
     # finally commit the changes
     psi.commit()
+    log.info('END BULK')
 
 
 def bulk_update_private(context, data_dict):

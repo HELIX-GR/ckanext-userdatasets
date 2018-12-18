@@ -1,5 +1,6 @@
 import importlib
 import ckan.plugins as p
+import ckanext.userdatasets.logic.action.update as update 
 
 config = {}
 import logging
@@ -49,14 +50,14 @@ class UserDatasetsPlugin(p.SingletonPlugin):
         to_override = [
             ('create', ['package_create']),
             ('update', ['package_update']),
-            ('update', ['bulk_update_public']),
             ('get', ['organization_list_for_user'])
         ]
         for override in to_override:
             uds_module = importlib.import_module('ckanext.userdatasets.logic.action.' + override[0])
             for fn_name in override[1]:
                 actions[fn_name] = getattr(uds_module, fn_name)
-
+        actions['bulk_update_public'] = update.bulk_update_public
+        actions['bulk_update_private'] = update.bulk_update_private
         return actions
 
 
