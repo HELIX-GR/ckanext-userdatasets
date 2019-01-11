@@ -152,6 +152,7 @@ def add_public_doi(datasets):
             new_uuid = uuid.uuid4()
             dataset['datacite.public_doi'] = str(new_uuid)
             package_update(context_copy, dataset)
+    return        
 
 def _bulk_update_dataset(context, data_dict, update_dict):
     ''' Bulk update shared code for organizations'''
@@ -160,7 +161,6 @@ def _bulk_update_dataset(context, data_dict, update_dict):
     org_id = data_dict.get('org_id')
     
     log.info(' datasets are %s, type %s', datasets, type(datasets))
-    add_public_doi(datasets)
         
     model = context['model']
     model.Session.query(model.package_table) \
@@ -212,7 +212,9 @@ def _bulk_update_dataset(context, data_dict, update_dict):
         process_solr(' OR '.join(q))
     # finally commit the changes
     psi.commit()
-    log.info('END BULK')
+
+    #add after bulk updated for session conflicts
+    add_public_doi(datasets)
 
 
 def bulk_update_private(context, data_dict):

@@ -2,9 +2,11 @@ from ckan.logic.auth import get_package_object, get_resource_object
 from ckan.authz import users_role_for_group_or_org, has_user_permission_for_some_org
 from ckanext.userdatasets.plugin import get_default_auth
 from ckanext.userdatasets.logic.auth.auth import user_owns_package_as_member, user_is_member_of_package_org
+import ckan.logic as logic
 import logging
 log1 = logging.getLogger(__name__)
 
+get_action = logic.get_action
 def package_create(context, data_dict):
     user = context['auth_user_obj']
     if data_dict and 'owner_org' in data_dict:
@@ -26,12 +28,16 @@ def resource_create(context, data_dict):
     user = context['auth_user_obj']
     model = context['model']
 
-    log1 = logging.getLogger(__name__)
+    
     package_id = data_dict.get('package_id')
-    package = model.Package.get(package_id)
+    if not package_id:  #workaround for editing datasets with no resources
+        package_id = data_dict.get('id')
+        data_dict['package_id'] = package_id
+    package = get_action('package_show')(context, {'id': package_id})
     if user_owns_package_as_member(user, package):
         return {'success': True}
     elif user_is_member_of_package_org(user, package):
+        log1.debug('in member org')
         return {'success': False}
 
     fallback = get_default_auth('create', 'resource_create')
