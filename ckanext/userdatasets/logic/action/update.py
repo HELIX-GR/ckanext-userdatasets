@@ -42,34 +42,10 @@ def package_update(context, data_dict):
     else:
         schema = package_plugin.update_package_schema()
 
-    # add dataset in corresponding topics(groups) based on subject
-    groups = ext_helpers.topicsMatch(data_dict['closed_tag'])
+    log.debug('package type %s', data_dict['type'])
     
-    context_group_update = context.copy()
-    context_group_update['ignore_auth'] = True
-    context_group_update['defer_commit'] = True
-    for group in groups:
-        group_data_dict = {"id": group,
-                             "object": pkg.id,
-                             "object_type": 'package',
-                             "capacity": 'public'}
-        try:
-            logic.get_action('member_create')(context_group_update, group_data_dict)
-        except NotFound:
-            abort(404, _('Group not found'))    
-
-    if 'group_id' in data_dict and data_dict['group_id']:  
-        #log.debug('group id %s',data_dict['group_id'])
-        # add dataset in chosen community(group)
-        community_data_dict = {"id": data_dict['group_id'],
-                                "object": pkg.id,
-                                "object_type": 'package',
-                                "capacity": 'public'}
-        try:
-            logic.get_action('member_create')(context_group_update, community_data_dict)
-        except NotFound:
-                abort(404, _('Community not found'))       
-
+    # add dataset in corresponding topics(groups) based on subject
+    #add_to_topic()
 
     # We modify the schema here to replace owner_org_validator by our own
     if 'owner_org' in schema:
@@ -87,7 +63,7 @@ def package_update(context, data_dict):
                 # Old plugins do not support passing the schema so we need
                 # to ensure they still work.
                 package_plugin.check_data_dict(data_dict)
-
+    
     data, errors = lib_plugins.plugin_validate(
         package_plugin, context, data_dict, schema, 'package_update')
     #log.debug('package_update validate_errs=%r user=%s package=%s data=%r',
@@ -149,8 +125,8 @@ def add_public_doi(datasets):
     for id in datasets:
         dataset = get_action('package_show')(context_copy, {'id': id})
         if 'datacite.public_doi' not in dataset:   
-            new_uuid = uuid.uuid4()
-            dataset['datacite.public_doi'] = str(new_uuid)
+            doi = ext_helpers.getDataciteDoi(dataset)
+            dataset['datacite.public_doi'] = doi
             package_update(context_copy, dataset)
     return        
 
@@ -242,3 +218,33 @@ def bulk_update_public(context, data_dict):
 
     logic.check_access('bulk_update_public', context, data_dict)
     _bulk_update_dataset(context, data_dict, {'private': False})
+
+
+def add_to_topic(context,data_dict):
+    if data_dict['type']!='harvest' and 'closed_tag' in data_dict:
+        groups = ext_helpers.topicsMatch(data_dict['closed_tag'])
+        
+        context_group_update = context.copy()
+        context_group_update['ignore_auth'] = True
+        context_group_update['defer_commit'] = True
+        for group in groups:
+            group_data_dict = {"id": group,
+                                "object": data_dict['id'],
+                                "object_type": 'package',
+                                "capacity": 'public'}
+            try:
+                logic.get_action('member_create')(context_group_update, group_data_dict)
+            except NotFound:
+                abort(404, _('Group not found'))    
+        
+        if 'group_id' in data_dict and data_dict['group_id']:  
+            #log.debug('group id %s',data_dict['group_id'])
+            # add dataset in chosen community(group)
+            community_data_dict = {"id": data_dict['group_id'],
+                                    "object": data_dict['id'],
+                                    "object_type": 'package',
+                                    "capacity": 'public'}
+            try:
+                logic.get_action('member_create')(context_group_update, community_data_dict)
+            except NotFound:
+                    abort(404, _('Community not found'))       
