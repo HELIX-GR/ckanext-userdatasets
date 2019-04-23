@@ -8,21 +8,20 @@ log1 = logging.getLogger(__name__)
 
 get_action = logic.get_action
 def package_create(context, data_dict):
-    user = context['auth_user_obj']
-    if data_dict and 'owner_org' in data_dict:
-        role = users_role_for_group_or_org(data_dict['owner_org'], user.name)
+    user = context['user']
+    #log1.debug('data dict %s, context %s', data_dict, context)
+    if data_dict and 'owner_org' in data_dict and data_dict['owner_org']:
+        role = users_role_for_group_or_org(data_dict['owner_org'], user)
         if role == 'member':
             return {'success': True}
     else:
         # If there is no organization, then this should return success if the user can create datasets for *some*
         # organisation (see the ckan implementation), so either if anonymous packages are allowed or if we have
         # member status in any organization.
-        if has_user_permission_for_some_org(user.name, 'read'):
+        if has_user_permission_for_some_org(user, 'read'):
             return {'success': True}
-
     fallback = get_default_auth('create', 'package_create')
     return fallback(context, data_dict)
-
 
 def resource_create(context, data_dict):
     user = context['auth_user_obj']

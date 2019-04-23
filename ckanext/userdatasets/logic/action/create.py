@@ -30,9 +30,7 @@ def package_create(context, data_dict):
     # We modify the schema here to replace owner_org_validator by our own
     if 'owner_org' in schema:
         schema['owner_org'] = [uds_oov if f is default_oov else f for f in schema['owner_org']]
-
     check_access('package_create', context, data_dict)
-
     if 'api_version' not in context:
         # check_data_dict() is deprecated. If the package_plugin has a
         # check_data_dict() we'll call it, if it doesn't have the method we'll
@@ -87,7 +85,6 @@ def package_create(context, data_dict):
                                              'organization_id': pkg.owner_org})
 
     # add dataset in corresponding topics(groups) based on subject
-    #log.debug('schema %s', schema)
     log.debug('package type %s', package_type)
     #add_to_topic(context, data_dict)
 
