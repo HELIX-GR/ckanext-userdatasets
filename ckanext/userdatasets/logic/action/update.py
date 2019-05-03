@@ -189,8 +189,9 @@ def _bulk_update_dataset(context, data_dict, update_dict):
     # finally commit the changes
     psi.commit()
 
-    #add after bulk updated for session conflicts
-    add_public_doi(datasets)
+    # add after bulk updated for session conflicts
+    if update_dict['private'] == False:
+        add_public_doi(datasets)
 
 
 def bulk_update_private(context, data_dict):
