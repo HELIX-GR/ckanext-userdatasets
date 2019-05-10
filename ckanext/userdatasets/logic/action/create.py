@@ -50,7 +50,9 @@ def package_create(context, data_dict):
     log.debug('package_create validate_errs=%r user=%s package=%s data=%r',
               errors, context.get('user'),
               data.get('name'), data_dict)
-
+    # ignore junk for oaipmh harvested datasets          
+    if '__junk' in errors:
+        errors.pop('__junk')
 
     if errors:
         model.Session.rollback()
