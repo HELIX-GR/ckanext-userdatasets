@@ -43,32 +43,34 @@ def package_update(context, data_dict):
         schema = package_plugin.update_package_schema()
 
     # add dataset in corresponding topics(groups) based on subject
-    groups = ext_helpers.topicsMatch(data_dict['closed_tag'])
-    
-    context_group_update = context.copy()
-    context_group_update['ignore_auth'] = True
-    context_group_update['defer_commit'] = True
-    for group in groups:
-        group_data_dict = {"id": group,
-                             "object": pkg.id,
-                             "object_type": 'package',
-                             "capacity": 'public'}
-        try:
-            logic.get_action('member_create')(context_group_update, group_data_dict)
-        except NotFound:
-            abort(404, _('Group not found'))    
-
-    if 'group_id' in data_dict and data_dict['group_id']:  
-        #log.debug('group id %s',data_dict['group_id'])
-        # add dataset in chosen community(group)
-        community_data_dict = {"id": data_dict['group_id'],
+    log.debug('package type %s', data_dict['type'])
+    if data_dict['type']!='harvest':
+        groups = ext_helpers.topicsMatch(data_dict['closed_tag'])
+        
+        context_group_update = context.copy()
+        context_group_update['ignore_auth'] = True
+        context_group_update['defer_commit'] = True
+        for group in groups:
+            group_data_dict = {"id": group,
                                 "object": pkg.id,
                                 "object_type": 'package',
                                 "capacity": 'public'}
-        try:
-            logic.get_action('member_create')(context_group_update, community_data_dict)
-        except NotFound:
-                abort(404, _('Community not found'))       
+            try:
+                logic.get_action('member_create')(context_group_update, group_data_dict)
+            except NotFound:
+                abort(404, _('Group not found'))    
+
+        if 'group_id' in data_dict and data_dict['group_id']:  
+            #log.debug('group id %s',data_dict['group_id'])
+            # add dataset in chosen community(group)
+            community_data_dict = {"id": data_dict['group_id'],
+                                    "object": pkg.id,
+                                    "object_type": 'package',
+                                    "capacity": 'public'}
+            try:
+                logic.get_action('member_create')(context_group_update, community_data_dict)
+            except NotFound:
+                    abort(404, _('Community not found'))       
 
 
     # We modify the schema here to replace owner_org_validator by our own
