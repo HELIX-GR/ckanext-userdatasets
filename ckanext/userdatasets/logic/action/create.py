@@ -46,7 +46,6 @@ def package_create(context, data_dict):
                 # to ensure they still work
                 package_plugin.check_data_dict(data_dict)
 
-    #if data_dict['dataset_type'] + '.subject_closed' not in data_dict and 
     data, errors = lib_plugins.plugin_validate(
         package_plugin, context, data_dict, schema, 'package_create')
     log.debug('package_create validate_errs=%r user=%s package=%s data=%r',
@@ -79,46 +78,49 @@ def package_create(context, data_dict):
     model.Session.flush()
     data['id'] = pkg.id
 
-    context_org_update = context.copy()
-    context_org_update['ignore_auth'] = True
-    context_org_update['defer_commit'] = True
-    get_action('package_owner_org_update')(context_org_update,
+    context_copy= context.copy()
+    context_copy['ignore_auth'] = True
+    context_copy['defer_commit'] = True
+    get_action('package_owner_org_update')(context_copy,
                                             {'id': pkg.id,
                                              'organization_id': pkg.owner_org})
 
     # add dataset in corresponding topics(groups) based on subject
-    #log.debug('schema %s', schema)
     log.debug('package type %s', package_type)
     log.debug('pkg %s', pkg)
     if package_type == 'dataset':
         groups = ext_helpers.topicsMatch(data_dict['closed_tag'])
-
-        context_group_update = context.copy()
-        context_group_update['ignore_auth'] = True
-        context_group_update['defer_commit'] = True
         for group in groups:
             group_data_dict = {"id": group,
                                 "object": pkg.id,
                                 "object_type": 'package',
                                 "capacity": 'public'}
             try:
-                logic.get_action('member_create')(context_group_update, group_data_dict)
+                logic.get_action('member_create')(context_copy, group_data_dict)
             except NotFound:
                 abort(404, _('Group not found'))   
         if 'group_id' in data_dict and data_dict['group_id']:  
-            #log.debug('group id %s',data_dict['group_id'])
             # add dataset in chosen community(group)
             community_data_dict = {"id": data_dict['group_id'],
                                     "object": pkg.id,
                                     "object_type": 'package',
                                     "capacity": 'public'}
             try:
-                logic.get_action('member_create')(context_group_update, community_data_dict)
+                logic.get_action('member_create')(context_copy, community_data_dict)
             except NotFound:
                     abort(404, _('Community not found'))   
 
     # if user is member of athena, add dataset to community Athena
-    
+    if user and user_obj.email.endswith("athena-innovation.gr"):
+        community_data_dict = {"id": 'athena',
+                                "object": pkg.id,
+                                "object_type": 'package',
+                                "capacity": 'public'}
+        try:
+                logic.get_action('member_create')(context_copy, community_data_dict)
+        except NotFound:
+                abort(404, _('Community not found'))  
+
     for item in plugins.PluginImplementations(plugins.IPackageController):
         item.create(pkg)
 
