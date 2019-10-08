@@ -61,7 +61,6 @@ def package_update(context, data_dict):
                 abort(404, _('Group not found'))    
 
         if 'group_id' in data_dict and data_dict['group_id']:  
-            #log.debug('group id %s',data_dict['group_id'])
             # add dataset in chosen community(group)
             community_data_dict = {"id": data_dict['group_id'],
                                     "object": pkg.id,
@@ -151,8 +150,8 @@ def add_public_doi(datasets):
     for id in datasets:
         dataset = get_action('package_show')(context_copy, {'id': id})
         if 'datacite.public_doi' not in dataset:   
-            new_uuid = uuid.uuid4()
-            dataset['datacite.public_doi'] = str(new_uuid)
+            doi = ext_helpers.getDataciteDoi(dataset)
+            dataset['datacite.public_doi'] = doi
             package_update(context_copy, dataset)
     return        
 
