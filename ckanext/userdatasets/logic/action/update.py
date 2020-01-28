@@ -24,8 +24,10 @@ abort = base.abort
 def package_update(context, data_dict):
     model = context['model']
     user = context['user']
-    name_or_id = data_dict.get("id") or data_dict['name']
-
+    #if it's an api call get inner dict
+    if 'api_version' in context and 'data_dict' in data_dict:
+        data_dict = data_dict['data_dict']
+    name_or_id = data_dict.get('id') or data_dict.get('name')
     pkg = model.Package.get(name_or_id)
     if pkg is None:
         raise NotFound(_('Package was not found.'))
@@ -149,7 +151,7 @@ def add_public_doi(datasets):
                    'user': c.user or c.author, 'auth_user_obj': c.userobj, 'ignore_auth' : True}
     for id in datasets:
         dataset = get_action('package_show')(context_copy, {'id': id})
-        if 'datacite.public_doi' not in dataset:   
+        if 'datacite.public_doi' not in dataset:
             doi = ext_helpers.getDataciteDoi(dataset)
             dataset['datacite.public_doi'] = doi
             package_update(context_copy, dataset)
